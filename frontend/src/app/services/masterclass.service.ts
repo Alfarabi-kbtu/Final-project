@@ -2,12 +2,14 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { IMasterClass} from '../models/models';
+import { environment } from '../../environments/environment';
+
 @Injectable({
   providedIn: 'root'
 })
 export class MasterclassService {
 
-  BASE_URL = "http://127.0.0.1:8000"
+  readonly BASE_URL = environment.apiUrl;
 
   constructor(private client: HttpClient) { }
 

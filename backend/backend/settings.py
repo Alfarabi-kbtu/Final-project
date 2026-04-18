@@ -1,4 +1,5 @@
 import datetime
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -9,12 +10,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-gfspbn32cj!budy&&t=0z0d)pl7wbrqf0nz&+^ef930lgm^om6'
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-gfspbn32cj!budy&&t=0z0d)pl7wbrqf0nz&+^ef930lgm^om6',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+_allowed = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
+ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
 
 
 # Application definition
@@ -60,7 +65,20 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:4200',
+    'http://127.0.0.1:4200',
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+    'http://chefin-app.local',
+    'http://chefin-api.local',
 ]
+
+_extra_cors = os.environ.get('DJANGO_CORS_EXTRA_ORIGINS', '')
+if _extra_cors.strip():
+    CORS_ALLOWED_ORIGINS.extend(
+        [o.strip() for o in _extra_cors.split(',') if o.strip()]
+    )
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -89,7 +107,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.environ.get('SQLITE_PATH', str(BASE_DIR / 'db.sqlite3')),
     }
 }
 
@@ -129,6 +147,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = Path(os.environ['MEDIA_ROOT_PATH']) if os.environ.get('MEDIA_ROOT_PATH') else BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field

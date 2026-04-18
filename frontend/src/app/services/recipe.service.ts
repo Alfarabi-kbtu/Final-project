@@ -1,21 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Observable, map, pipe } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import { ICategoriesList, IRecipe } from '../models/models';
-import { recipesList } from '../pages/recipes-page/generator';
-import { getCategories } from '../layouts/main/generator';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-
-const headers = {
-  'Authorization': `Bearer ${localStorage.getItem('token')}`,
-};
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RecipeService {
 
-  BASE_URL = "http://127.0.0.1:8000"
+  readonly BASE_URL = environment.apiUrl;
 
   constructor(private client: HttpClient) { }
 
@@ -39,7 +34,7 @@ export class RecipeService {
     return this.client.get<ICategoriesList[]>(`${this.BASE_URL}/categories`);
   }
 
-  createRecipe(recipe: IRecipe): Observable<IRecipe> {    
-    return this.client.post<IRecipe>(`${this.BASE_URL}/recipes/create/`, recipe, {headers});
+  createRecipe(recipe: FormData): Observable<IRecipe> {
+    return this.client.post<IRecipe>(`${this.BASE_URL}/recipes/create/`, recipe);
   }
 }

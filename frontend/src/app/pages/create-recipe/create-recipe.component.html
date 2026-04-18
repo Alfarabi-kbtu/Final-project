@@ -3,39 +3,37 @@
 <div mat-dialog-content class="wrapper">
   <form [formGroup]="createRecipeForm">
     <mat-form-field>
-      <input matInput formControlName="name" placeholder="Name" [(ngModel)]="createRecipeForm.value.name" />
+      <input matInput formControlName="name" placeholder="Name" />
       <mat-error *ngIf="createRecipeForm?.get('name')?.hasError('required')">
         Name is required
       </mat-error>
     </mat-form-field>
 
-    <mat-form-field>
-      <input matInput formControlName="image" placeholder="image" [(ngModel)]="createRecipeForm.value.image" />
-      <mat-error *ngIf="createRecipeForm?.get('image')?.hasError('required')">
-        Image is required
-      </mat-error>
-    </mat-form-field>
+    <div class="image-field">
+      <label class="image-label" for="recipe-image-input">Photo</label>
+      <input
+        id="recipe-image-input"
+        type="file"
+        accept="image/*"
+        (change)="onFileSelected($event)"
+      />
+      <p class="hint" *ngIf="!selectedFile">Choose an image from your device</p>
+      <img *ngIf="imagePreview" [src]="imagePreview" alt="Preview" class="image-preview" />
+    </div>
 
     <mat-form-field>
-      <input matInput formControlName="description" placeholder="Description" [(ngModel)]="createRecipeForm.value.description" />
+      <input matInput formControlName="description" placeholder="Description" />
       <mat-error *ngIf="createRecipeForm?.get('description')?.hasError('required')">
         Description is required
       </mat-error>
     </mat-form-field>
 
     <mat-form-field>
-      <input matInput formControlName="steps" placeholder="Steps" [(ngModel)]="createRecipeForm.value.steps" />
+      <input matInput formControlName="steps" placeholder="Steps" />
       <mat-error *ngIf="createRecipeForm?.get('steps')?.hasError('required')">
         Steps is required
       </mat-error>
     </mat-form-field>
-
-    <!-- <mat-form-field>
-      <input matInput formControlName="category" placeholder="Category" [(ngModel)]="createRecipeForm.value.category" />
-      <mat-error *ngIf="isValidCategory(createRecipeForm.value.category)">
-        Possible categories: Salad, Italian, Meat, Burger, Soup
-      </mat-error>
-    </mat-form-field> -->
 
     <mat-form-field>
       <mat-label>Category</mat-label>
@@ -53,9 +51,14 @@
 
 <mat-dialog-actions class="btns">
   <button mat-button (click)="onCancelClick()">Cancel</button>
-  <button mat-button color="primary" (click)="onSubmit()">Create</button>
+  <button
+    mat-button
+    color="primary"
+    [disabled]="!createRecipeForm.valid || !selectedFile"
+    (click)="onSubmit()"
+  >
+    Create
+  </button>
 </mat-dialog-actions>
-
-
 
 

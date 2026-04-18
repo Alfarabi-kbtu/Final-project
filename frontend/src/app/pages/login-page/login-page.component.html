@@ -25,6 +25,7 @@
         >Password is required</mat-error
       >
     </mat-form-field>
+    <p class="login-error" *ngIf="loginError">{{ loginError }}</p>
   </form>
 </div>
 

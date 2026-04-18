@@ -1,9 +1,9 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 import { RecipeService } from 'src/app/services/recipe.service';
-import { IRecipe, ICategoriesList, ICategory } from 'src/app/models/models';
+import { ICategory } from 'src/app/models/models';
 
 import { getCategories } from 'src/app/layouts/main/generator';
 
@@ -12,22 +12,21 @@ import { getCategories } from 'src/app/layouts/main/generator';
   templateUrl: './create-recipe.component.html',
   styleUrls: ['./create-recipe.component.scss']
 })
-export class CreateRecipeComponent implements OnInit {
+export class CreateRecipeComponent implements OnInit, OnDestroy {
   username: string = '';
 
-  category!: ICategory;
   categoriesList: ICategory[] = [];
-  categories: ICategoriesList[] = [];
-  category_id !: number;
 
   selectedCategory: any;
+  selectedFile: File | null = null;
+  imagePreview: string | null = null;
+
   createRecipeForm = new FormGroup({
     id: new FormControl(''),
     name: new FormControl('', [Validators.required]),
-    image: new FormControl('', Validators.required),
-    description: new FormControl('', Validators.required),
+    description: new FormControl('', [Validators.required]),
     category: new FormControl(null, Validators.required),
-    steps: new FormControl('', Validators.required),
+    steps: new FormControl('', [Validators.required]),
   });
 
   constructor(private recipeService: RecipeService, @Inject(MAT_DIALOG_DATA) public data: any, private dialogRef: MatDialogRef<CreateRecipeComponent>) { }
@@ -37,39 +36,50 @@ export class CreateRecipeComponent implements OnInit {
     this.categoriesList = getCategories;
   }
 
-  onSubmit(): void {
-    if(this.createRecipeForm.valid) {
-      const formData = this.createRecipeForm.value;
-      const name = formData.name;
-      const image = formData.image;
-      const description = formData.description;
-      const category = formData.category
-      const stepsArray = formData.steps
-
-      this.recipeService.getCategoryByID(Number(category!)).subscribe(data => {
-        this.category_id = data.id;
-
-        const newRecipe: any = {
-          username: localStorage.getItem('username'),
-          name: name!,
-          description: description!,
-          image : image!,
-          steps: stepsArray!,
-          category_id : this.category_id,
-        }
-  
-        this.recipeService.createRecipe(newRecipe).subscribe(
-          (response) => {
-            console.log('Recipe created successfully!', response);
-          },
-          (error) =>{
-            console.log('Error: ', error);
-          }
-        );
-
-        this.dialogRef.close();
-      });
+  ngOnDestroy(): void {
+    if (this.imagePreview) {
+      URL.revokeObjectURL(this.imagePreview);
     }
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (this.imagePreview) {
+      URL.revokeObjectURL(this.imagePreview);
+      this.imagePreview = null;
+    }
+    if (file && file.type.startsWith('image/')) {
+      this.selectedFile = file;
+      this.imagePreview = URL.createObjectURL(file);
+    } else {
+      this.selectedFile = null;
+    }
+  }
+
+  onSubmit(): void {
+    if (!this.createRecipeForm.valid || !this.selectedFile) {
+      return;
+    }
+    const formData = this.createRecipeForm.value;
+    const categoryId = Number(formData.category);
+
+    const fd = new FormData();
+    fd.append('username', localStorage.getItem('username') || '');
+    fd.append('name', formData.name!);
+    fd.append('description', formData.description!);
+    fd.append('steps', formData.steps!);
+    fd.append('category_id', String(categoryId));
+    fd.append('image', this.selectedFile, this.selectedFile.name);
+
+    this.recipeService.createRecipe(fd).subscribe({
+      next: () => {
+        this.dialogRef.close();
+      },
+      error: (error) => {
+        console.log('Error: ', error);
+      },
+    });
   }
 
   onCancelClick(): void {

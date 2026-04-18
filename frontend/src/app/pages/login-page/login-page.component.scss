@@ -3,6 +3,12 @@ form {
     flex-direction: column;
 }
 
+.login-error {
+    color: #c62828;
+    font-size: 14px;
+    margin: 0 0 8px;
+}
+
 .btns {
     display: flex;
     flex-direction: row;

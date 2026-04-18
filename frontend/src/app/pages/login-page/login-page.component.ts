@@ -28,13 +28,22 @@ export class LoginPageComponent {
     this.password = data.password;
   }
 
+  loginError = '';
+
   login(): void {
-    this.loginService.login(this.username, this.password).subscribe((data) => {      
-      localStorage.setItem('token', data.access);
-      localStorage.setItem('username', this.username);
-      this.isLogged = true;
-      this.loginSuccess.emit({ isLogged: this.isLogged, username: this.username, password: this.password });
-    })
+    this.loginError = '';
+    this.loginService.login(this.username, this.password).subscribe({
+      next: (data) => {
+        localStorage.setItem('token', data.access);
+        localStorage.setItem('username', this.username);
+        this.isLogged = true;
+        this.loginSuccess.emit({ isLogged: this.isLogged, username: this.username, password: this.password });
+        this.dialogRef.close({ success: true, username: this.username });
+      },
+      error: () => {
+        this.loginError = 'Invalid username or password.';
+      },
+    });
   }
 
   onSubmit(): void {
@@ -44,8 +53,7 @@ export class LoginPageComponent {
         this.password = this.loginForm.value.password;
         this.login();
       }
-      this.dialogRef.close(this.loginForm.value);
-    }    
+    }
   }
 
   onCancel(): void {

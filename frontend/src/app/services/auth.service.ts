@@ -3,13 +3,14 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { AuthToken, SignUpToken } from '../models/models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  BASE_URL = "http://localhost:8000"
+  readonly BASE_URL = environment.apiUrl;
 
   constructor(private client: HttpClient) { }
 

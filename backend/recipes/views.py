@@ -1,4 +1,10 @@
-from django.views.decorators.csrf import csrf_exempt
+import os
+import uuid
+from pathlib import Path
+
+from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view
@@ -27,12 +33,29 @@ class RecipeCreateAPIView(APIView):
     def post(self, request):
         try:
             category = Category.objects.get(pk=request.data.get('category_id'))
-        except Category.DoesNotExist as e:
+        except Category.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = RecipeSerializer(data=request.data)
+
+        data = request.data.copy()
+        image_file = request.FILES.get('image')
+        if image_file:
+            ext = os.path.splitext(image_file.name)[1].lower()
+            if ext not in ('.jpg', '.jpeg', '.png', '.gif', '.webp'):
+                ext = '.jpg'
+            name = f'recipes/{uuid.uuid4().hex}{ext}'
+            path = default_storage.save(name, ContentFile(image_file.read()))
+            posix = Path(path).as_posix()
+            media_path = f"{settings.MEDIA_URL.rstrip('/')}/{posix}"
+            data['image'] = request.build_absolute_uri(media_path)
+        elif not data.get('image'):
+            return Response(
+                {'image': ['Provide an image file or image URL.']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = RecipeSerializer(data=data)
         if serializer.is_valid():
-            serializer.save(category = category)
+            serializer.save(category=category)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
